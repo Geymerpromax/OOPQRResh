@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 
 // Общий класс для ингридиентов
-public class Ingridients
+public abstract class Ingridients
 {
     private static int idCounter = 0;
     public int id { get; }
     public string name { get; set; }
     public DateTime expiryDate { get; set; } // срок годности
 
-    protected Ingridients(string name, DateTime expiryDate)
+    public  Ingridients(string name, DateTime expiryDate)
     {
         idCounter++;
         id = idCounter;
@@ -147,7 +146,6 @@ public class DishManagement
             {
                 foreach (var ingredient in dish.ingredients)
                 {
-                    // Ищем соответствующий ингредиент на складе и списываем его
                     foreach (var item in ingredientsStorage.ingredientsOnStorage)
                     {
                         if (item.ingridients.id == ingredient.id)
@@ -171,7 +169,6 @@ public class DishManagement
             {
                 foreach (var ingredient in dish.ingredients)
                 {
-                    // Ищем соответствующий ингредиент на складе и проверяем его доступность
                     foreach (var item in ingredientsStorage.ingredientsOnStorage)
                     {
                         if (item.ingridients.id == ingredient.id && item.amount > 0)
@@ -199,7 +196,6 @@ public class DishManagement
     }
 }
 
-//продукты на складе
 public class IngredientsOnStorage
 {
     public Ingridients ingridients { get; set; }
@@ -210,6 +206,7 @@ public class IngredientsOnStorage
         this.amount = amount;
     }
 }
+
 // Учёт продуктов склада
 public class IngredientsStorage
 {
@@ -232,16 +229,18 @@ public class IngredientsStorage
         Console.WriteLine("Проверка доступности продукта для заказа");
         foreach (Ingridients product in avaliableProductsFromOrder)
         {
+            // Ищем совпадения по ид
             if (product.id == idIngredient)
             {
                 Console.WriteLine("Продукт доступен");
-                // Проверяем, есть ли уже такой продукт на складе
+
+                // Проверяем, есть ли такой продукт на складе
                 bool found = false;
                 foreach (IngredientsOnStorage ingredient in ingredientsOnStorage)
                 {
                     if (ingredient.ingridients.id == idIngredient)
                     {
-                        // Если продукт уже есть на складе, увеличиваем его количество
+                        // Если продукт есть - увеличиваем его количество
                         ingredient.amount += amount;
                         found = true;
                         Console.WriteLine($"Количество продукта \"{ingredient.ingridients.name}\" " +
@@ -251,7 +250,7 @@ public class IngredientsStorage
                 }
                 if (!found)
                 {
-                    // Если продукта еще нет на складе, добавляем его
+                    // Если продукта нет добавляем и увеличиваем
                     ingredientsOnStorage.Add(new IngredientsOnStorage(product, amount));
                     Console.WriteLine("Продукт заказан");
                 }
@@ -271,7 +270,7 @@ public class IngredientsStorage
         }
         if (amount <= 0)
         {
-            Console.WriteLine("Неверное количество");
+            Console.WriteLine("Ошибка, количество не может быть отрицательным");
             return;
         }
         Console.WriteLine("Проверка наличия продукта на складе");
@@ -281,13 +280,13 @@ public class IngredientsStorage
             {
                 if (ingredient.amount >= amount)
                 {
-                    // Если на складе есть достаточное количество продукта, списываем его
+                    // Если на складе достаточно продукта, списываем его
                     ingredient.amount -= amount;
                     Console.WriteLine($"Списано {amount} единиц продукта \"{ingredient.ingridients.name}\" со склада");
                 }
                 else
                 {
-                    // Если на складе не хватает продукта, выводим сообщение об ошибке
+                    // Если нет - выводим ошибку
                     Console.WriteLine($"На складе недостаточно продукта \"{ingredient.ingridients.name}\"");
                 }
                 return;
@@ -399,22 +398,21 @@ internal class Program
             switch (choice)
             {
                 case "1":
-                    Console.Write("Введите id продукта");
+                    Console.Write("Введите id продукта: ");
                     int delivId = Convert.ToInt32(Console.ReadLine());
-                    Console.Write("Введите количество продуктов");
+                    Console.Write("Введите количество продуктов: ");
                     int delivWe = Convert.ToInt32(Console.ReadLine());
                     ingredientsStorage.DeliveryIngredients(delivId, delivWe);
                     break;
                 case "2":
-                    Console.Write("Введите id продукта");
+                    Console.Write("Введите id продукта: ");
                     int dispId = Convert.ToInt32(Console.ReadLine());
-                    Console.Write("Введите количество продуктов");
+                    Console.Write("Введите количество продуктов: ");
                     int dispWe = Convert.ToInt32(Console.ReadLine());
                     ingredientsStorage.DisposalIngredients(dispId, dispWe);
                     break;
                 case "3":
                     Console.WriteLine("Выберите блюдо для заказа:");
-                    // Выводим список блюд из меню
                     for (int i = 0; i < dishManager.menu.Count; i++)
                     {
                         Console.WriteLine($"{i + 1}. {dishManager.menu[i].name} - {dishManager.menu[i].price} руб.");
@@ -427,12 +425,11 @@ internal class Program
                     }
                     else
                     {
-                        Console.WriteLine("Неверный номер блюда.");
+                        Console.WriteLine("Неверный номер блюда");
                     }
                     break;
                 case "4":
                     Console.WriteLine("Выберите блюдо для возврата:");
-                    // Выводим список блюд из меню
                     for (int i = 0; i < dishManager.menu.Count; i++)
                     {
                         Console.WriteLine($"{i + 1}. {dishManager.menu[i].name}");
